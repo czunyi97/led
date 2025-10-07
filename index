@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LED Vezérlés</title>
+<style>
+  body {
+    font-family: 'Poppins', sans-serif;
+    margin: 0; padding: 0;
+    background: #0a0a0a;
+    color: white;
+    display: flex; flex-direction: column;
+    align-items: center;
+  }
+
+  h2 { margin-top: 20px; color: #00c3ff; }
+
+  /* Tab stílus */
+  .tab-container {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    margin-top: 10px;
+  }
+
+  .tab {
+    flex: 1;
+    text-align: center;
+    padding: 10px;
+    cursor: pointer;
+    background: #111;
+    border-bottom: 2px solid transparent;
+  }
+  .tab.active {
+    background: #222;
+    border-bottom: 2px solid #00c3ff;
+  }
+
+  /* Tartalom */
+  .content {
+    width: 90%;
+    max-width: 400px;
+    margin-top: 20px;
+    display: none;
+  }
+  .content.active { display: block; }
+
+  /* Slider és gombok */
+  .slider { width: 100%; }
+  .color-mode { display: flex; justify-content: space-around; margin: 15px 0; }
+  .color-mode button {
+    background: #222;
+    border: 1px solid #00c3ff;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .color-mode button.active {
+    background: #00c3ff;
+    color: black;
+  }
+
+  /* Preview */
+  .preview {
+    width: 100%;
+    height: 40px;
+    border-radius: 8px;
+    margin-top: 10px;
+  }
+
+  /* Control gomb */
+  .control-btn {
+    background: #00c3ff;
+    color: black;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 15px;
+    margin-top: 15px;
+    width: 100%;
+    font-size: 16px;
+    cursor: pointer;
+  }
+
+</style>
+</head>
+<body>
+
+<h2>LED Vezérlés</h2>
+
+<!-- Fülek -->
+<div class="tab-container">
+  <div class="tab active" data-tab="status">ℹ️ Áttekintés</div>
+  <div class="tab" data-tab="runlight">🏃 Futófény</div>
+  <div class="tab" data-tab="flame">🔥 Láng effekt</div>
+  <div class="tab" data-tab="ledcolor">🎨 LED színek</div>
+</div>
+
+<!-- Tartalmak -->
+<div id="status" class="content active">
+  <p>LED állapot: <strong>Bekapcsolva</strong></p>
+  <p>Aktuális effekt: <strong>Futófény</strong></p>
+  <button class="control-btn">Frissítés</button>
+</div>
+
+<!-- Futófény fül -->
+<div id="runlight" class="content">
+  <label>Sebesség: <span id="speedValue">50</span></label>
+  <input type="range" min="1" max="100" value="50" class="slider" id="speedRange">
+
+  <div class="color-mode">
+    <button id="rainbowBtn" class="active">🌈 Szivárvány</button>
+    <button id="singleBtn">🎨 Egy szín</button>
+  </div>
+
+  <div id="colorSelect" style="display:none; text-align:center;">
+    <label>Szín kiválasztása:</label><br>
+    <input type="color" id="singleColor" value="#00ffcc">
+  </div>
+
+  <div class="preview" id="colorPreview"></div>
+
+  <button class="control-btn">Mentés</button>
+</div>
+
+<!-- Láng effekt fül -->
+<div id="flame" class="content">
+  <h3>Láng effekt beállítások</h3>
+
+  <div class="color-mode">
+    <button class="flameMode active" data-mode="classic">🔥 Klasszikus</button>
+    <button class="flameMode" data-mode="gas">🔵 Gázláng</button>
+    <button class="flameMode" data-mode="campfire">🪵 Tábortűz</button>
+    <button class="flameMode" data-mode="candle">🕯️ Gyertya</button>
+  </div>
+
+  <label>Sebesség: <span id="flameSpeedValue">50</span></label>
+  <input type="range" min="1" max="100" value="50" class="slider" id="flameSpeed">
+
+  <label>Intenzitás: <span id="flameIntensityValue">80</span></label>
+  <input type="range" min="1" max="100" value="80" class="slider" id="flameIntensity">
+
+  <div style="margin-top:10px;">
+    <label>Színárnyalat:</label>
+    <input type="color" id="flameColor" value="#ff4500">
+  </div>
+
+  <div class="preview" id="flamePreview" style="height:60px; margin-top:15px;"></div>
+  <button class="control-btn">Mentés</button>
+</div>
+
+<!-- LED színek fül -->
+<div id="ledcolor" class="content">
+  <h3>LED kiválasztás</h3>
+  <label>LED szám: 
+    <input type="number" id="ledIndex" min="1" max="9" value="1" style="width:50px">
+  </label>
+  <br><br>
+  <label>Szín:</label>
+  <input type="color" id="ledColor" value="#00ffcc">
+
+  <div class="preview" id="ledPreview" style="height:40px; margin-top:15px;"></div>
+  <button class="control-btn">Mentés</button>
+</div>
+
+<script>
+  // Fülek váltása
+  const tabs = document.querySelectorAll('.tab');
+  const contents = document.querySelectorAll('.content');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      contents.forEach(c => c.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(tab.dataset.tab).classList.add('active');
+    });
+  });
+
+  // Futófény vezérlés
+  const speedRange = document.getElementById('speedRange');
+  const speedValue = document.getElementById('speedValue');
+  speedRange.oninput = () => speedValue.innerText = speedRange.value;
+
+  const rainbowBtn = document.getElementById('rainbowBtn');
+  const singleBtn = document.getElementById('singleBtn');
+  const colorSelect = document.getElementById('colorSelect');
+  const colorPreview = document.getElementById('colorPreview');
+
+  rainbowBtn.onclick = () => {
+    rainbowBtn.classList.add('active');
+    singleBtn.classList.remove('active');
+    colorSelect.style.display = 'none';
+    colorPreview.style.background = 'linear-gradient(90deg, red, orange, yellow, green, cyan, blue, violet)';
+  };
+  singleBtn.onclick = () => {
+    singleBtn.classList.add('active');
+    rainbowBtn.classList.remove('active');
+    colorSelect.style.display = 'block';
+    updateColorPreview();
+  };
+  document.getElementById('singleColor').oninput = updateColorPreview;
+  function updateColorPreview() {
+    colorPreview.style.background = document.getElementById('singleColor').value;
+  }
+  updateColorPreview();
+
+  // Láng effekt vezérlés
+  const flameModes = document.querySelectorAll('.flameMode');
+  const flameSpeed = document.getElementById('flameSpeed');
+  const flameSpeedValue = document.getElementById('flameSpeedValue');
+  const flameIntensity = document.getElementById('flameIntensity');
+  const flameIntensityValue = document.getElementById('flameIntensityValue');
+  const flameColor = document.getElementById('flameColor');
+  const flamePreview = document.getElementById('flamePreview');
+
+  let selectedFlameMode = 'classic';
+  flameModes.forEach(btn => {
+    btn.addEventListener('click', () => {
+      flameModes.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedFlameMode = btn.dataset.mode;
+      updateFlamePreview();
+    });
+  });
+
+  flameSpeed.oninput = () => { flameSpeedValue.innerText = flameSpeed.value; updateFlamePreview(); };
+  flameIntensity.oninput = () => { flameIntensityValue.innerText = flameIntensity.value; updateFlamePreview(); };
+  flameColor.oninput = updateFlamePreview;
+
+  function updateFlamePreview() {
+    let color = flameColor.value;
+    let gradient;
+    switch(selectedFlameMode) {
+      case 'classic':
+        gradient = `linear-gradient(90deg, ${color}, #ffae42, #ff0000)`;
+        break;
+      case 'gas':
+        gradient = `linear-gradient(90deg, #0044ff, #00aaff, ${color})`;
+        break;
+      case 'campfire':
+        gradient = `linear-gradient(90deg, #ff4500, #ffae42, #ff0000, ${color})`;
+        break;
+      case 'candle':
+        gradient = `linear-gradient(90deg, #fffacd, ${color})`;
+        break;
+    }
+    flamePreview.style.background = gradient;
+  }
+  updateFlamePreview();
+
+  // LED szín kiválasztás előnézet
+  const ledColor = document.getElementById('ledColor');
+  const ledPreview = document.getElementById('ledPreview');
+  ledColor.oninput = () => { ledPreview.style.background = ledColor.value; };
+  ledPreview.style.background = ledColor.value;
+
+</script>
+</body>
+</html>
