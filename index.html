@@ -16,14 +16,12 @@
 
   h2 { margin-top: 20px; color: #00c3ff; }
 
-  /* Tab stílus */
   .tab-container {
     display: flex;
     width: 100%;
     justify-content: center;
     margin-top: 10px;
   }
-
   .tab {
     flex: 1;
     text-align: center;
@@ -37,7 +35,6 @@
     border-bottom: 2px solid #00c3ff;
   }
 
-  /* Tartalom */
   .content {
     width: 90%;
     max-width: 400px;
@@ -46,7 +43,6 @@
   }
   .content.active { display: block; }
 
-  /* Slider és gombok */
   .slider { width: 100%; }
   .color-mode { display: flex; justify-content: space-around; margin: 15px 0; }
   .color-mode button {
@@ -62,38 +58,35 @@
     background: #00c3ff;
     color: black;
   }
-
-  /* Preview */
   .preview {
     width: 100%;
     height: 40px;
     border-radius: 8px;
     margin-top: 10px;
   }
-
-  /* Control gomb */
   .control-btn {
     background: #00c3ff;
     color: black;
     border: none;
     border-radius: 8px;
     padding: 10px 15px;
-    margin-top: 15px;
+    margin-top: 10px;
+    margin-bottom: 0;
     width: 100%;
     font-size: 16px;
     cursor: pointer;
   }
 
-  /* LED mátrix stílus */
-  .led-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 60px);
-    grid-template-rows: repeat(3, 60px);
-    gap: 10px;
-    justify-content: center;
-    margin-top: 15px;
+  /* --- KÖRKÖRÖS LED-RENDEZÉS --- */
+  .led-circle-container {
+    position: relative;
+    width: 260px; height: 260px;
+    margin: 0 auto;
   }
-  .led-circle {
+  .circle-led {
+    position: absolute;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
     background: #222;
     border: 2px solid #00c3ff;
@@ -102,26 +95,15 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px;
     color: white;
-    position: relative;
+    font-size: 14px;
+    user-select: none;
+    box-sizing: border-box;
   }
-  .led-circle.selected {
+  .circle-led.selected {
     border-color: #ffcc00;
   }
-  .copy-btn, .paste-btn {
-    position: absolute;
-    bottom: 2px;
-    font-size: 12px;
-    background: rgba(255,255,255,0.2);
-    border: none;
-    border-radius: 4px;
-    color: black;
-    padding: 2px 4px;
-    cursor: pointer;
-  }
-  .copy-btn { left: 2px; }
-  .paste-btn { right: 2px; }
+
 </style>
 </head>
 <body>
@@ -188,58 +170,16 @@
   <button class="control-btn">Mentés</button>
 </div>
 
-<!-- LED színek fül -->
+<!-- LED színek fül - KÖRKÖRÖS ELRENDEZÉS, csak egy másolás és beillesztés gomb -->
 <div id="ledcolor" class="content">
   <h3>LED kiválasztás</h3>
-
-  <div class="led-grid">
-    <div class="led-circle" data-index="0">
-      1
-      <button class="copy-btn">📋</button>
-      <button class="paste-btn">📌</button>
-    </div>
-    <div class="led-circle" data-index="1">
-      2
-      <button class="copy-btn">📋</button>
-      <button class="paste-btn">📌</button>
-    </div>
-    <div class="led-circle" data-index="2">
-      3
-      <button class="copy-btn">📋</button>
-      <button class="paste-btn">📌</button>
-    </div>
-    <div class="led-circle" data-index="3">
-      4
-      <button class="copy-btn">📋</button>
-      <button class="paste-btn">📌</button>
-    </div>
-    <div class="led-circle" data-index="4">
-      5
-      <button class="copy-btn">📋</button>
-      <button class="paste-btn">📌</button>
-    </div>
-    <div class="led-circle" data-index="5">
-      6
-      <button class="copy-btn">📋</button>
-      <button class="paste-btn">📌</button>
-    </div>
-    <div class="led-circle" data-index="6">
-      7
-      <button class="copy-btn">📋</button>
-      <button class="paste-btn">📌</button>
-    </div>
-    <div class="led-circle" data-index="7">
-      8
-      <button class="copy-btn">📋</button>
-      <button class="paste-btn">📌</button>
-    </div>
-    <div class="led-circle" data-index="8">
-      9
-      <button class="copy-btn">📋</button>
-      <button class="paste-btn">📌</button>
-    </div>
+  <div class="led-circle-container" id="ledCircleContainer" style="position:relative; width:260px; height:260px; margin:0 auto;">
+    <!-- LED-ek ide generálódnak JS-ből -->
   </div>
-
+  <div style="text-align:center; margin-top:10px;">
+    <button class="control-btn" id="copyBtn">Másolás</button>
+    <button class="control-btn" id="pasteBtn">Beillesztés</button>
+  </div>
   <div style="text-align:center; margin-top:15px;">
     <label>Szín kiválasztása:</label>
     <input type="color" id="ledColor" value="#00ffcc">
@@ -311,42 +251,66 @@
   }
   updateFlamePreview();
 
-  // LED színek (3x3)
-  const leds = document.querySelectorAll('.led-circle');
+  // --- KÖRKÖRÖS LED-RENDEZÉS CSAK 1 MÁSOLÁS ÉS 1 BEILLESZTÉS GOMB ---
+  const ledsCount = 12;
+  const ledContainer = document.getElementById('ledCircleContainer');
+  const ledColorInput = document.getElementById('ledColor');
   let selectedLed = 0;
   let copiedColor = null;
-  const ledColorInput = document.getElementById('ledColor');
+  let leds = [];
 
-  leds.forEach((led, idx) => {
-    led.addEventListener('click', () => {
-      selectedLed = idx;
-      leds.forEach(l=>l.classList.remove('selected'));
-      led.classList.add('selected');
-      ledColorInput.value = rgbToHex(led.style.backgroundColor || '#222222');
-    });
-    // Copy / Paste gombok
-    led.querySelector('.copy-btn').addEventListener('click', e=>{
-      e.stopPropagation();
-      copiedColor = rgbToHex(led.style.backgroundColor || '#222222');
-    });
-    led.querySelector('.paste-btn').addEventListener('click', e=>{
-      e.stopPropagation();
-      if(copiedColor) { led.style.background = copiedColor; }
-    });
-  });
+  function renderCircleLeds() {
+    ledContainer.innerHTML = "";
+    const radius = 110;
+    const center = 130;
+    for(let i=0; i<ledsCount; i++) {
+      const angle = (2*Math.PI/ledsCount)*i - Math.PI/2;
+      const x = center + radius*Math.cos(angle) - 24;
+      const y = center + radius*Math.sin(angle) - 24;
 
+      const led = document.createElement("div");
+      led.className = "circle-led";
+      led.style.left = `${x}px`;
+      led.style.top = `${y}px`;
+      led.dataset.index = i;
+      led.style.background = leds[i]?.color || "#222";
+      if(i === selectedLed) led.classList.add("selected");
+      led.innerHTML = `${i+1}`;
+      ledContainer.appendChild(led);
+
+      led.addEventListener('click', function(){
+        selectedLed = i;
+        leds.forEach(l=>l.el.classList.remove('selected'));
+        led.classList.add('selected');
+        ledColorInput.value = rgbToHex(led.style.background || '#222222');
+      });
+
+      leds[i] = {el: led, color: leds[i]?.color || "#222"};
+    }
+  }
   document.getElementById('applyColor').addEventListener('click', ()=>{
-    leds[selectedLed].style.background = ledColorInput.value;
+    leds[selectedLed].el.style.background = ledColorInput.value;
+    leds[selectedLed].color = ledColorInput.value;
   });
 
+  document.getElementById('copyBtn').addEventListener('click', ()=>{
+    copiedColor = rgbToHex(leds[selectedLed].el.style.background || '#222222');
+  });
+  document.getElementById('pasteBtn').addEventListener('click', ()=>{
+    if(copiedColor) {
+      leds[selectedLed].el.style.background = copiedColor;
+      leds[selectedLed].color = copiedColor;
+    }
+  });
   function rgbToHex(rgb){
     if(!rgb) return '#222222';
+    if(rgb.startsWith("#")) return rgb;
     const result = rgb.match(/\d+/g);
     if(!result) return '#222222';
     return "#" + result.map(x=> (+x).toString(16).padStart(2,'0')).join('');
   }
+  renderCircleLeds();
 
 </script>
 </body>
 </html>
-
