@@ -84,26 +84,44 @@
     cursor: pointer;
   }
 
-  /* LED kör stílus */
-  .led-container {
-    position: relative;
-    width: 300px; height: 300px;
-    margin: 0 auto;
+  /* LED mátrix stílus */
+  .led-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 60px);
+    grid-template-rows: repeat(3, 60px);
+    gap: 10px;
+    justify-content: center;
+    margin-top: 15px;
   }
   .led-circle {
-    width: 40px; height: 40px;
     border-radius: 50%;
     background: #222;
     border: 2px solid #00c3ff;
-    position: absolute;
-    top: 50%; left: 50%;
-    transform-origin: center -100px;
     cursor: pointer;
     transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: white;
+    position: relative;
   }
-  .led-circle:nth-child(n) {
-    transform: rotate(calc(var(--i) * 40deg)) translateY(-100px);
+  .led-circle.selected {
+    border-color: #ffcc00;
   }
+  .copy-btn, .paste-btn {
+    position: absolute;
+    bottom: 2px;
+    font-size: 12px;
+    background: rgba(255,255,255,0.2);
+    border: none;
+    border-radius: 4px;
+    color: black;
+    padding: 2px 4px;
+    cursor: pointer;
+  }
+  .copy-btn { left: 2px; }
+  .paste-btn { right: 2px; }
 </style>
 </head>
 <body>
@@ -173,16 +191,53 @@
 <!-- LED színek fül -->
 <div id="ledcolor" class="content">
   <h3>LED kiválasztás</h3>
-  <div class="led-container">
-    <div class="led-circle" style="--i:0;"></div>
-    <div class="led-circle" style="--i:1;"></div>
-    <div class="led-circle" style="--i:2;"></div>
-    <div class="led-circle" style="--i:3;"></div>
-    <div class="led-circle" style="--i:4;"></div>
-    <div class="led-circle" style="--i:5;"></div>
-    <div class="led-circle" style="--i:6;"></div>
-    <div class="led-circle" style="--i:7;"></div>
-    <div class="led-circle" style="--i:8;"></div>
+
+  <div class="led-grid">
+    <div class="led-circle" data-index="0">
+      1
+      <button class="copy-btn">📋</button>
+      <button class="paste-btn">📌</button>
+    </div>
+    <div class="led-circle" data-index="1">
+      2
+      <button class="copy-btn">📋</button>
+      <button class="paste-btn">📌</button>
+    </div>
+    <div class="led-circle" data-index="2">
+      3
+      <button class="copy-btn">📋</button>
+      <button class="paste-btn">📌</button>
+    </div>
+    <div class="led-circle" data-index="3">
+      4
+      <button class="copy-btn">📋</button>
+      <button class="paste-btn">📌</button>
+    </div>
+    <div class="led-circle" data-index="4">
+      5
+      <button class="copy-btn">📋</button>
+      <button class="paste-btn">📌</button>
+    </div>
+    <div class="led-circle" data-index="5">
+      6
+      <button class="copy-btn">📋</button>
+      <button class="paste-btn">📌</button>
+    </div>
+    <div class="led-circle" data-index="6">
+      7
+      <button class="copy-btn">📋</button>
+      <button class="paste-btn">📌</button>
+    </div>
+    <div class="led-circle" data-index="7">
+      8
+      <button class="copy-btn">📋</button>
+      <button class="paste-btn">📌</button>
+    </div>
+    <div class="led-circle" data-index="8">
+      9
+      <button class="copy-btn">📋</button>
+      <button class="paste-btn">📌</button>
+    </div>
   </div>
 
   <div style="text-align:center; margin-top:15px;">
@@ -205,7 +260,7 @@
     });
   });
 
-  // Futófény vezérlés
+  // Futófény
   const speedRange = document.getElementById('speedRange');
   const speedValue = document.getElementById('speedValue');
   speedRange.oninput = () => speedValue.innerText = speedRange.value;
@@ -215,25 +270,13 @@
   const colorSelect = document.getElementById('colorSelect');
   const colorPreview = document.getElementById('colorPreview');
 
-  rainbowBtn.onclick = () => {
-    rainbowBtn.classList.add('active');
-    singleBtn.classList.remove('active');
-    colorSelect.style.display = 'none';
-    colorPreview.style.background = 'linear-gradient(90deg, red, orange, yellow, green, cyan, blue, violet)';
-  };
-  singleBtn.onclick = () => {
-    singleBtn.classList.add('active');
-    rainbowBtn.classList.remove('active');
-    colorSelect.style.display = 'block';
-    updateColorPreview();
-  };
+  rainbowBtn.onclick = () => { rainbowBtn.classList.add('active'); singleBtn.classList.remove('active'); colorSelect.style.display='none'; colorPreview.style.background='linear-gradient(90deg, red, orange, yellow, green, cyan, blue, violet)'; }
+  singleBtn.onclick = () => { singleBtn.classList.add('active'); rainbowBtn.classList.remove('active'); colorSelect.style.display='block'; updateColorPreview(); }
   document.getElementById('singleColor').oninput = updateColorPreview;
-  function updateColorPreview() {
-    colorPreview.style.background = document.getElementById('singleColor').value;
-  }
+  function updateColorPreview() { colorPreview.style.background = document.getElementById('singleColor').value; }
   updateColorPreview();
 
-  // Láng effekt vezérlés
+  // Láng effekt
   const flameModes = document.querySelectorAll('.flameMode');
   const flameSpeed = document.getElementById('flameSpeed');
   const flameSpeedValue = document.getElementById('flameSpeedValue');
@@ -241,17 +284,16 @@
   const flameIntensityValue = document.getElementById('flameIntensityValue');
   const flameColor = document.getElementById('flameColor');
   const flamePreview = document.getElementById('flamePreview');
-
   let selectedFlameMode = 'classic';
+
   flameModes.forEach(btn => {
     btn.addEventListener('click', () => {
-      flameModes.forEach(b => b.classList.remove('active'));
+      flameModes.forEach(b=>b.classList.remove('active'));
       btn.classList.add('active');
       selectedFlameMode = btn.dataset.mode;
       updateFlamePreview();
     });
   });
-
   flameSpeed.oninput = () => { flameSpeedValue.innerText = flameSpeed.value; updateFlamePreview(); };
   flameIntensity.oninput = () => { flameIntensityValue.innerText = flameIntensity.value; updateFlamePreview(); };
   flameColor.oninput = updateFlamePreview;
@@ -259,49 +301,52 @@
   function updateFlamePreview() {
     let color = flameColor.value;
     let gradient;
-    switch(selectedFlameMode) {
-      case 'classic':
-        gradient = `linear-gradient(90deg, ${color}, #ffae42, #ff0000)`;
-        break;
-      case 'gas':
-        gradient = `linear-gradient(90deg, #0044ff, #00aaff, ${color})`;
-        break;
-      case 'campfire':
-        gradient = `linear-gradient(90deg, #ff4500, #ffae42, #ff0000, ${color})`;
-        break;
-      case 'candle':
-        gradient = `linear-gradient(90deg, #fffacd, ${color})`;
-        break;
+    switch(selectedFlameMode){
+      case 'classic': gradient = `linear-gradient(90deg, ${color}, #ffae42, #ff0000)`; break;
+      case 'gas': gradient = `linear-gradient(90deg, #0044ff, #00aaff, ${color})`; break;
+      case 'campfire': gradient = `linear-gradient(90deg, #ff4500, #ffae42, #ff0000, ${color})`; break;
+      case 'candle': gradient = `linear-gradient(90deg, #fffacd, ${color})`; break;
     }
     flamePreview.style.background = gradient;
   }
   updateFlamePreview();
 
-  // LED szín kiválasztás körben
+  // LED színek (3x3)
   const leds = document.querySelectorAll('.led-circle');
   let selectedLed = 0;
+  let copiedColor = null;
   const ledColorInput = document.getElementById('ledColor');
 
   leds.forEach((led, idx) => {
     led.addEventListener('click', () => {
       selectedLed = idx;
-      leds.forEach(l => l.style.borderColor = '#00c3ff');
-      led.style.borderColor = '#ffcc00'; // kiválasztott LED kiemelése
+      leds.forEach(l=>l.classList.remove('selected'));
+      led.classList.add('selected');
       ledColorInput.value = rgbToHex(led.style.backgroundColor || '#222222');
+    });
+    // Copy / Paste gombok
+    led.querySelector('.copy-btn').addEventListener('click', e=>{
+      e.stopPropagation();
+      copiedColor = rgbToHex(led.style.backgroundColor || '#222222');
+    });
+    led.querySelector('.paste-btn').addEventListener('click', e=>{
+      e.stopPropagation();
+      if(copiedColor) { led.style.background = copiedColor; }
     });
   });
 
-  document.getElementById('applyColor').addEventListener('click', () => {
+  document.getElementById('applyColor').addEventListener('click', ()=>{
     leds[selectedLed].style.background = ledColorInput.value;
   });
 
-  function rgbToHex(rgb) {
-    if (!rgb) return '#222222';
+  function rgbToHex(rgb){
+    if(!rgb) return '#222222';
     const result = rgb.match(/\d+/g);
     if(!result) return '#222222';
-    return "#" + result.map(x => (+x).toString(16).padStart(2,'0')).join('');
+    return "#" + result.map(x=> (+x).toString(16).padStart(2,'0')).join('');
   }
 
 </script>
 </body>
 </html>
+
